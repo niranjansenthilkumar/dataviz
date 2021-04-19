@@ -1,0 +1,218 @@
+<html>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+    /* Add your CSS styles here! */
+    .headlineText{
+        color:black;
+        width:790px;
+        height:30px;
+        position:absolute;
+        top:60px;
+        left:10px;
+        text-align:center;
+    }
+    .sliderContainer{
+        width:800px;
+        height:20px;
+    }
+    .timeline{
+        width:800px;
+        height:100px;
+    }
+    </style>
+    <body>
+    <div class="timeline"></div>
+    
+    <script>
+
+        let height = 60;
+        let width = 800;
+        let margin = {top: 10, right:10, bottom:10, left:10};
+        let timeScale;
+        let minDate, maxDate;
+        let timeData, headlineText;
+
+        let animate = true; // Controller on whether to display the RESUME button
+        let numMonths = 198; // max number of months we'll have a headline for
+        let animationDuration=30000; // Time to complete one cycle of animation. Can be tuned for UX
+
+
+        let canvas = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom);
+
+
+        const renderTimeline = async() => {
+            let data = await d3.json("data/headlines.json");
+            data.forEach(function(d){
+                d["date"] =new Date(d["date"])
+            });
+            // Filter headlines that are more current than the Kaggle data
+            data = data.filter(d=> d.date < new Date("2017-01-01 00:00:00")); 
+            timeData = data; 
+            console.log(data);
+            
+            minDate = d3.min(data, d=>d.date);
+            maxDate = d3.max(data, d=>d.date);
+            //console.log(minDate + maxDate);
+
+            // Scale to convert between rectangle ("slider") width and a Date
+            timeScale = d3.scaleTime()
+                .domain([minDate, maxDate])
+                .range([0, width]);
+            let timeAxis = d3.axisBottom(timeScale);
+
+            // Setting up the slider area
+            let sliderContainer = d3.select(".timeline").append("div").attr("class",".sliderContainer");
+            let sliderCanvas = sliderContainer.append("svg").attr("width", 800).attr("height", 40)
+                .on("click", clickedBar);
+            let barLayer = sliderCanvas.append("g");
+            let timeAxisLayer = sliderCanvas.append("g")
+                .attr("transform", `translate(0, 20)`)
+                .call(timeAxis);
+            
+            // The timeline bar
+            let bar = barLayer.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", timeScale(maxDate))
+                .attr("height", 20)
+                .attr("fill", "black")
+                .attr("class", "timelineBar")
+                .call(d3.drag()
+                    .on("start", dragstart)
+                    .on("end", dragend)
+                    .on("drag", dragging));
+
+            // Displays the date and headline below the timeline
+            let headlineText = d3.select("body").append("div")
+               .attr("class", "headlineText");
+
+            // Begins animating the time progression
+            animateBar(timeScale, maxDate, minDate);   
+
+            // Creates (but hides) a "resume" button for controlling animations
+            d3.select("body").append("text")
+                .text("")
+                .attr("class", "resume-btn")
+                .on("click", resumeAnimation);    
+      
+        }
+        renderTimeline();
+
+          /**
+            Given a position on the screen, displays the headline of the latest event before the
+            selected time. 
+        */
+        function getNearestHeadline(x){
+            let time = timeScale.invert(x);
+
+            let candidates = timeData.filter(d=> d.date <= time); // Get all possible dates
+            let nearestHeadline = candidates[candidates.length -1];
+
+            let formatTime = d3.timeFormat("%B %Y");
+            d3.select(".headlineText").html(
+                    `<b>${formatTime(nearestHeadline.date)}</b>: ${nearestHeadline.headline}`);
+        }
+
+        /**
+            Once the "resume" button has been clicked, picks up animating where the user selected
+        */
+        function resumeAnimation(){
+            animate = true; 
+            d3.select(".resume-btn").text("");
+            //animateBar(timeScale, maxDate, minDate);  
+
+            d3.select(".timelineBar")
+                    .transition()
+                        .ease(d3.easeLinear)
+                        .duration(animationDuration)
+                        .attr("width", timeScale(maxDate))
+                        .on("start", start)
+                        .on("end", animateBar(timeScale, maxDate, minDate));       
+        }
+
+        /**
+            Pauses the animation so that the user can manually interact with the timeline. 
+        */
+        function pauseAnimation(){
+            d3.select(".timelineBar").transition().duration(0); // Pause the animation
+            d3.select(".resume-btn").text("RESUME");
+            animate = false; // TODO: Use to show a resume button to keep the animation going
+        }
+
+        function dragstart(){
+            if(animate){
+                pauseAnimation();
+            }
+        }
+        function dragging(d){
+            d3.select(this).attr("width", d3.event.x);
+            getNearestHeadline(d3.event.x);
+        }
+        function dragend(d){
+            getNearestHeadline(d3.event.x);
+        }
+
+        
+        function clickedBar(){
+            //console.log(d3.event);
+            if(animate){
+                pauseAnimation();
+            }
+
+            getNearestHeadline(d3.event.x);
+
+            d3.select(".timelineBar")
+                .attr("width", d3.event.x);
+        }
+
+        /**
+            Helper function for the animateHeadlines function
+        */
+        const waitFor = (ms) => new Promise(r => setTimeout(r, ms))
+        const asyncForEach = async(callback) => {
+        while(true){
+            await callback();
+            }
+        }
+
+        /**
+           Updates the headline based on the current position of the animated timeline. 
+        */
+        const animateHeadlines = async () => {
+            var array = new Array(numMonths); // A hack to make it easier to iterate through the headlines synchronously
+            await asyncForEach(async() => {
+                await waitFor(animationDuration/numMonths);
+                //console.log(d3.select(".timelineBar").attr("width"));
+                getNearestHeadline(d3.select(".timelineBar").attr("width"));
+            })
+            console.log('Done');
+        }
+
+        /**
+            Main controller when animation is running on its own. 
+        */
+        function animateBar(timeScale, maxDate, minDate){
+            repeat();
+            function repeat(){
+                d3.select(".timelineBar")
+                    .attr("width", timeScale(minDate))
+                    .attr("T", 0)
+                    .transition()
+                        .ease(d3.easeLinear)
+                        .duration(animationDuration)
+                        .attr("width", timeScale(maxDate))
+                        .attr("T", 1)
+                        .on("start", animateHeadlines)
+                        .on("end", repeat);   
+            }
+        }
+
+        
+
+        
+    </script>
+    </body>
+</html>

@@ -1,0 +1,20 @@
+<html>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+    /* Add your CSS styles here! */
+    </style>
+    <body>
+    Hello World!
+    <script>
+        // Example of using the dates from the json file
+        // Easiest way to use the date is to make a JS object and use D3 formatting. 
+        d3.json("headlines.json", function(data){
+            data.forEach(function(d){
+                d["date"] = new Date(d["date"])
+            });
+            console.log(data);
+
+        })
+    </script>
+    </body>
+</html>

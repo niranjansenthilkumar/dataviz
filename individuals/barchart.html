@@ -1,0 +1,209 @@
+<html>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+    body {
+        font-family: 'Lato', sans-serif;
+    }
+
+    .row{ 
+        display: flex; 
+        align-items: center;
+    }
+
+    </style>
+    <body>
+
+        <div class="container">
+            <div id="slider"></div>
+            <br>
+            <div class="row">
+                <div id="definitions" class="col-md-6">
+                    <h2><strong>Definitions of Status</strong></h2>
+                    <h6><i>Numbers calculated on a yearly basis</i></h6>
+                    <br>
+                    <p><strong>Pending at Start: </strong>Number of refugee status claims pending at the beginning of the year</p>
+                    <p><strong>Applicants: </strong>Number of applications for refugee status submitted</p>
+                    <p><strong>Recognized: </strong>Number of refugee status claims recognized</p>
+                    <p><strong>Closed: </strong>Number of claims closed</p>
+                    <p><strong>Rejected: </strong>Number of rejected refugee stauts claims</p>
+                    <p><strong>Other: </strong>Number of other decisions</p>
+                    <p><strong>Pending at End: </strong>Number of claims pending at the end of the year</p>
+                </div>
+                <div id="barChart" class="col-md-6">
+                    <svg id="decisions" height="500" width="600"></svg>
+                </div>
+            </div>
+            
+        </div>
+
+    <script>
+
+        let svgDecisions = d3.select("svg#decisions");
+        let svgWidth = svgDecisions.attr("width");
+        let svgHeight = svgDecisions.attr("height");
+
+        let padding = {top: 20, bottom: 30, left: 50, right: 50};
+        let chartWidth = svgWidth - padding.left - padding.right;
+        let chartHeight = svgHeight - padding.top - padding.bottom;
+
+        // Array to store relevant data
+        const syrianData = [];
+
+        let xScale = d3.scaleBand()  
+            .domain(['Pending at Start', 'Applicants', 'Recognized', 'Closed', 'Rejected', 'Other', 'Pending at End'])             
+            .rangeRound([0, chartWidth])
+            .padding(0.3);
+        
+        let yScale = d3.scalePow()
+            .exponent(0.3)
+            .domain([0,1000000])
+            .range([chartHeight,0]);
+
+        const xAxis = d3.axisBottom(xScale);
+        
+        svgDecisions.append("g")
+            .attr("class", "x axis")
+            .attr("transform","translate("+ padding.left +","+ (padding.top + chartHeight)+")")
+            .call(xAxis);
+
+        const yAxis = d3.axisLeft(yScale)
+            .tickFormat(d3.format("0.1s"));
+        
+        svgDecisions.append("g")
+            .attr("class", "y axis")
+            .attr("transform","translate("+ (padding.left) +","+ padding.top +")")
+            .call(yAxis);
+
+        let barSVG = svgDecisions.append("g")
+            .attr("transform","translate("+ padding.left +","+ padding.top +")");
+
+        var slider = d3.select("#slider");
+        var year = 2000;
+        
+        slider.append("div").text("Please select a year: ")
+            .append("div").append("input")
+            .attr("type", "range")
+            .attr("class", "slider")
+            .attr("id","year")
+            .style("width","300px")
+            .attr("min", 2000)
+            .attr("max",2016)
+            .attr("step", 1)
+            .attr("value", year)
+            .on("input", function () {
+                year = Number(this.value);
+                //bars.remove();
+                updateChart(year);
+            });
+
+        function startingChart() {
+            year = 2000;
+            return updateChart(year);
+        }
+
+        var initChart = startingChart();
+
+        function updateChart(year){
+            var numApplicants = 0;
+            var numRecognized = 0;
+            var numOther = 0;
+            var numRejected = 0;
+            var numClosed = 0;
+            var numPendingStart = 0;
+            var numPendingEnd = 0;
+
+            syrianData.forEach( d => {
+                if (d['Year'] == year){
+                    numApplicants += d['Applied during year'];
+                    numRecognized += d['decisions_recognized'];
+                    numOther += d['decisions_other'];
+                    numRejected += d['Rejected'];
+                    numClosed += d['Otherwise closed'];
+                    numPendingStart += d['Tota pending start-year'];
+                    numPendingEnd += d['Total pending end-year'];
+                }
+            });
+            
+            let barCategories = ['Pending at Start', 'Applicants', 'Recognized', 'Closed', 'Rejected', 'Other', 'Pending at End'];
+            let barHeights = [numPendingStart, numApplicants, numRecognized, numClosed, numRejected, numOther, numPendingEnd];
+
+            var barData = [];
+            for(var i = 0; i < 7; i++){
+                barData.push({"category": barCategories[i], "height": barHeights[i]})
+            }
+            console.log(barData)
+
+            var bars = barSVG.selectAll(".bar")
+                .data(barData)
+
+            bars.exit().remove();
+
+            var newBars = bars.enter()
+                .append("rect")       
+                .attr("class", "bar")
+                .attr("x", d => xScale(d.category))
+                .attr("width", xScale.bandwidth())
+                .attr("y", d => chartHeight)
+                .attr("height", 0)
+                .style("fill", "#e25d5d");
+            
+            newBars.merge(bars)
+                .transition()
+                .duration(1000)
+                .attr("y", d => yScale(d.height))
+                .attr("height", d => chartHeight - yScale(d.height));
+
+            var heightText = barSVG.selectAll(".height")
+                .data(barData)
+
+            heightText.exit().remove();
+            
+            var newText = heightText.enter()
+                .append("text")
+                .attr("class", "height")
+                .text("")
+                .attr("text-anchor", "middle")
+                .attr("x", d => xScale(d.category) + xScale.bandwidth() / 2)
+                .attr("y", d => 0)
+                .attr("fill", "black")
+                .attr("font-size", 14)
+
+            newText.merge(heightText)
+                .transition()
+                .duration(1000)
+                .text(d => d.height.toLocaleString())
+                .attr("y", d => yScale(d.height) - 10)
+            
+        }
+
+        const requestData = async () => {
+
+            const asylumSeekers = await d3.csv('/data/asylum_seekers.csv', d3.autoType);
+            
+            // Cleanup data, create new array for Syrian Refugee Crisis 
+            //const syrianData = []
+            asylumSeekers.forEach( d => {
+                d['destination'] = d['Country / territory of asylum/residence'];
+
+                var relevantKeys = ['Applied during year', 'decisions_recognized', 'decisions_other', 'Rejected',
+                    'Otherwise closed', 'Tota pending start-year', 'Total pending end-year']
+
+                for(var i = 0; i < relevantKeys.length; i++){
+                    if (d[relevantKeys[i]] == null || d[relevantKeys[i]] == '*'){
+                        d[relevantKeys[i]] = 0;
+                    };
+                }
+
+                if (d['Origin'] == "Syrian Arab Rep."){
+                    syrianData.push(d);
+                }
+            });
+       };
+
+        requestData();
+
+    </script>
+    </body>
+</html>

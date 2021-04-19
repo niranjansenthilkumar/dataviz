@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Syrian Refugee Crisis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">    
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script type="text/javascript" src="http://d3js.org/topojson.v2.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title"><strong>Syrian Refugee Crisis</strong> </h1>
+        <h4 class="subtitle">An exploration of the emigration of Syrians from 2000-2016</h4>
+        <p class="headlineP">The Syrian Civil War, and by extension the refugee crisis, has been going on for much longer than anyone realizes. 
+            Watch how the history of the war unfolds, or take control of the timeline to discover it for yourself. 
+        </p>
+        <br>
+    </div>
+    <div class="mapcontainer">
+        <svg id="mercator" height = "450" width = "960"></svg>
+        <h6 id="existing"></h6>
+        <br>
+    </div>
+
+    <div class="timeline">
+        <button class="resume-button">Resume</button>
+    </div>
+    <br>
+
+    <div class="container bottomScreen">
+        <div class="row">
+            <div id="barChartText" class="col-md-6">
+                <div class="description">
+                    <h3>Yearly Refugee Status Decisions</h3>
+                    <p>Refugee Status Determination is the legal process that determines whether a person seeking international shelter is considered refugee by law in their
+                        new country of residence.</p>
+                </div>
+                <hr>
+                <div class="definitions">
+                                     
+                    <p><strong>Pending at Start: </strong>Number of refugee status claims pending at the beginning of the year</p>
+                    <p><strong>Applicants: </strong>Number of new refugee status claims </p>
+                    <p><strong>Recognized: </strong>Number of refugee status claims recognized</p>
+                    <p><strong>Closed: </strong>Number of claims closed</p>
+                    <p><strong>Rejected: </strong>Number of rejected refugee stauts claims</p>
+                    <p><strong>Other: </strong>Number of other decisions</p>
+                    <p><strong>Pending at End: </strong>Number of claims pending at the end of the year</p>
+                </div>
+            </div>
+            <div id="barChart" class="col-md-6">
+                <svg id="decisions" height="500" width="600"></svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Visualization based on analysis of UNHCR Refugee Data</p>
+    </div>
+
+    <script src="main.js"></script>
+ 
+</body>
+</html>

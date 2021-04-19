@@ -1,0 +1,96 @@
+body {
+    font-family: 'Lato', sans-serif !important;
+}
+
+div.header {
+    padding-top: 20px;
+    height: 100px;
+    width: auto;
+    text-align: center;
+    margin-bottom: 100px;
+}
+.headlineP{
+    color:black;
+    width:80%;
+    margin:auto;
+    text-align:center;
+}
+
+.subtitle {
+    color: #686868;
+}
+
+.footer {
+    text-align: center;
+    color: #686868;
+    margin-top: 75px; 
+    margin-bottom: 50px;
+}
+
+/**----STYLING FOR TIMELINE----*/
+.headlineText{
+    color:black;
+    width:100%;
+    height:30px;
+    margin:auto 10px;
+    text-align:center;
+}
+.sliderContainer{
+    width:100%;
+    height:20px;
+    display:inline-block;
+    margin-top:10px;
+    margin-bottom:20px;
+
+}
+.timeline{
+    width:800px;
+    height:100px;
+    margin:auto;
+}
+
+
+/* General button styling inspired by https://www.w3schools.com/css/css3_buttons.asp*/
+.resume-button {
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    background-color:#f4f4f4;
+    color: black;
+    border-radius: 2px;
+    border:none;
+    font-size:10px;
+    margin:0;
+}
+.resume-button:hover{
+    color:blue;
+    border:none;
+}
+
+
+/**----STYLING FOR GRAPHS----*/
+.row{ 
+    display: flex; 
+    align-items: center;
+}
+
+.bottomScreen{
+    margin-top: 30px;
+}
+
+.definitions{
+    font-size: 14px;
+}
+
+.definitions p {
+    margin-bottom: 5px;
+}
+
+.definitions i {
+    font-size: 11px;
+}
+
+/**----STYLING FOR MAP----*/
+
+.mapcontainer h6 {
+    font-size: 12px;
+}
